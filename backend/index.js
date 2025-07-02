@@ -63,7 +63,7 @@ app.post("/recettes", async (req, res) => {
       "Glucides": glucides || null,
       "Ingrédients": ingredients || [],
       "Intolérances": intolérances || [],
-      "Étapes": etapes || "",
+      "Étapes": Array.isArray(etapes) ? etapes.join('\n') : etapes || "",
       "Vitamines": vitamines || "",
       "Minéraux": mineraux || "",
     });
@@ -73,10 +73,11 @@ app.post("/recettes", async (req, res) => {
       ...created.fields,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Erreur Airtable création recette :", err);
     res.status(500).json({ error: "Erreur lors de la création de la recette." });
   }
 });
+
 
 
 
