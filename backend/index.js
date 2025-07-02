@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { table } = require("./airtable");
+
 require("dotenv").config();
 
 const app = express();
@@ -69,6 +70,26 @@ app.get('/recettes/:id', async (req, res) => {
     res.status(404).json({ error: 'Recette non trouvée' });
   }
 });
+
+/**
+ * GET /ingredients/:id — récupérer un ingrédient par son ID
+ */
+app.get('/ingredients/:id', async (req, res) => {
+  try {
+    const record = await table.find(req.params.id);
+    if (!record) {
+      return res.status(404).json({ error: 'Ingrédient non trouvé' });
+    }
+    res.json({
+      id: record.id,
+      ...record.fields
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: 'Ingrédient non trouvé' });
+  }
+});
+
 
 app.listen(3000, () => {
   console.log("✅ Serveur backend lancé sur http://localhost:3000");
