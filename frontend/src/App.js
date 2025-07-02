@@ -127,30 +127,53 @@ function RecetteList() {
 function RecetteDetail() {
   const { id } = useParams();
   const [recette, setRecette] = useState(null);
+  const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Chargement de la recette
   useEffect(() => {
-  fetch(`http://localhost:3000/recettes/${id}`)
-    .then(res => res.json())
-    .then(data => {
-      const recetteFormatee = {
-        nom: data.Nom.trim(),
-        description: data.Description,
-        etapes: data['Étapes'] ? data['Étapes'].split('\n').map(e => e.trim()) : [],
-        nbPersonnes: data['Nb de personnes'],
-        calories: data.Calories,
-        proteines: data['Protéines'],
-        lipides: data.Lipides,
-        glucides: data.Glucides,
-        ingredientsIds: data['Ingrédients'] || [],
-        vitamines: data.Vitamines,
-        mineraux: data['Minéraux'],
-      };
-      setRecette(recetteFormatee);
-      setLoading(false);
-    })
-    .catch(console.error);
-}, [id]);
+    setLoading(true);
+    fetch(`http://localhost:3000/recettes/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        const recetteFormatee = {
+          nom: data.Nom?.trim() || '',
+          description: data.Description || '',
+          etapes: data['Étapes'] ? data['Étapes'].split('\n').map(e => e.trim()) : [],
+          nbPersonnes: data['Nb de personnes'] || 0,
+          calories: data.Calories || 0,
+          proteines: data['Protéines'] || 0,
+          lipides: data.Lipides || 0,
+          glucides: data.Glucides || 0,
+          ingredientsIds: data['Ingrédients'] || [],
+          vitamines: data.Vitamines || '',
+          mineraux: data['Minéraux'] || '',
+        };
+        setRecette(recetteFormatee);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, [id]);
+
+  // Chargement des détails des ingrédients à partir de leurs IDs
+  useEffect(() => {
+    if (!recette?.ingredientsIds?.length) {
+      setIngredients([]);
+      return;
+    }
+    Promise.all(
+      recette.ingredientsIds.map(ingId =>
+        fetch(`http://localhost:3000/ingredients/${ingId}`)
+          .then(res => res.json())
+          .catch(() => null)
+      )
+    ).then(results => {
+      setIngredients(results.filter(Boolean));
+    });
+  }, [recette?.ingredientsIds]);
 
   if (loading) {
     return (
@@ -179,15 +202,7 @@ function RecetteDetail() {
         ← Retour à la liste
       </Button>
 
-      <Card
-        variant="outlined"
-        sx={{
-          borderRadius: 3,
-          boxShadow: 3,
-          p: 3,
-          bgcolor: 'background.paper',
-        }}
-      >
+      <Card variant="outlined" sx={{ borderRadius: 3, boxShadow: 3, p: 3, bgcolor: 'background.paper' }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 2 }}>
           {recette.nom}
         </Typography>
@@ -199,23 +214,19 @@ function RecetteDetail() {
         </Typography>
 
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Calories
-          </Typography>
+          <Typography variant="h6" gutterBottom>Calories</Typography>
           <Typography variant="body1" color="primary" sx={{ fontWeight: 600 }}>
             {recette.calories} kcal
           </Typography>
         </Box>
 
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Ingrédients
-          </Typography>
-          {recette.ingredients && recette.ingredients.length > 0 ? (
+          <Typography variant="h6" gutterBottom>Ingrédients</Typography>
+          {ingredients.length > 0 ? (
             <ul>
-              {recette.ingredients.map((ing, idx) => (
+              {ingredients.map((ing, idx) => (
                 <li key={idx}>
-                  <Typography variant="body1">{ing}</Typography>
+                  <Typography variant="body1">{ing.Nom || ing.nom || 'Ingrédient inconnu'}</Typography>
                 </li>
               ))}
             </ul>
@@ -227,16 +238,12 @@ function RecetteDetail() {
         </Box>
 
         <Box>
-          <Typography variant="h6" gutterBottom>
-            Étapes
-          </Typography>
-          {recette.etapes && recette.etapes.length > 0 ? (
+          <Typography variant="h6" gutterBottom>Étapes</Typography>
+          {recette.etapes.length > 0 ? (
             <ol>
               {recette.etapes.map((etape, idx) => (
                 <li key={idx}>
-                  <Typography variant="body1" paragraph>
-                    {etape}
-                  </Typography>
+                  <Typography variant="body1" paragraph>{etape}</Typography>
                 </li>
               ))}
             </ol>
@@ -250,6 +257,7 @@ function RecetteDetail() {
     </Container>
   );
 }
+
 
 export default function App() {
   return (
