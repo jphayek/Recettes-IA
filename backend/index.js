@@ -57,6 +57,19 @@ app.post("/recettes", async (req, res) => {
   }
 });
 
+app.get('/recettes/:id', async (req, res) => {
+  try {
+    const record = await table.find(req.params.id);
+    console.log(record.fields);
+    res.json({
+      id: record.id,
+      ...record.fields
+    });
+  } catch (err) {
+    res.status(404).json({ error: 'Recette non trouvée' });
+  }
+});
+
 app.listen(3000, () => {
   console.log("✅ Serveur backend lancé sur http://localhost:3000");
 });
