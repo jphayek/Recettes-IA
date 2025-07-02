@@ -6,8 +6,31 @@ import {
   Button,
   Box,
   Alert,
+  Select, MenuItem, InputLabel, FormControl, Checkbox, ListItemText
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+
+async function getIngredientIdsByName(names) {
+  if (!names || names.length === 0) return [];
+  const response = await fetch('http://localhost:3000/ingredients/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ names }),
+  });
+  const data = await response.json();
+  return data.map(i => i.id);
+}
+
+async function getIntoleranceIdsByName(names) {
+  if (!names || names.length === 0) return [];
+  const response = await fetch('http://localhost:3000/intolerances/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ names }),
+  });
+  const data = await response.json();
+  return data.map(i => i.id);
+}
 
 export default function RecetteCreate() {
   const [nom, setNom] = useState('');
@@ -16,48 +39,74 @@ export default function RecetteCreate() {
   const [nbPersonnes, setNbPersonnes] = useState('');
   const [calories, setCalories] = useState('');
   const [error, setError] = useState('');
+  const [proteines, setProteines] = useState('');
+  const [lipides, setLipides] = useState('');
+  const [glucides, setGlucides] = useState('');
+  const [ingredients, setIngredients] = useState('');  
+  //const [intolerances, setIntolerances] = useState('');
+  const [vitamines, setVitamines] = useState('');
+  const [mineraux, setMineraux] = useState('');
+  const [intolerances, setIntolerances] = useState([]);
+
+  const intolerancesOptions = [
+    "Gluten",
+    "Lactose",
+    "Fruits à coque",
+    "Œufs",
+    "Soja",
+    "Poissons",
+  ];
+
+  const handleIntolerancesChange = (event) => {
+    setIntolerances(event.target.value);
+  };
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!nom.trim() || !description.trim()) {
-      setError('Le nom et la description sont obligatoires.');
-      return;
-    }
+  // On récupère la liste d’ingrédients en tableau
+  const ingredientNames = ingredients
+    .split('\n')
+    .map(i => i.trim())
+    .filter(i => i !== '');
 
-    if (!calories || Number(calories) <= 0) {
-      setError('Les calories doivent être un nombre supérieur à 0.');
-      return;
-    }
+  
+  const intoleranceNames = intolerances;
+
+  try {
+    const ingredientIds = await getIngredientIdsByName(ingredientNames);
+    const intoleranceIds = await getIntoleranceIdsByName(intoleranceNames);
 
     const recette = {
-      nom: nom.trim(),
-      description: description.trim(),
+      nom,
+      description,
       etapes: etapes.split('\n').map(e => e.trim()).filter(e => e !== ''),
-      nbPersonnes: Number(nbPersonnes) || 1,
+      nbPersonnes: Number(nbPersonnes),
       calories: Number(calories),
+      proteines: Number(proteines),
+      lipides: Number(lipides),
+      glucides: Number(glucides),
+      ingredients: ingredientIds,   
+      intolerances: intoleranceIds,
+      vitamines,
+      mineraux,
     };
 
-    fetch('http://localhost:3000/recettes', {
+    // POST vers Airtable (ou ton backend)
+    await fetch('http://localhost:3000/recettes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(recette),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errorText = await res.text();
-          throw new Error(`Erreur API : ${res.status} ${errorText}`);
-        }
-        return res.json();
-      })
-      .then(() => {
-        navigate('/');
-      })
-      .catch((err) => {
-        setError(err.message);
-      });
-  };
+    });
+
+    navigate('/');
+  } catch (err) {
+    setError(err.message);
+  }
+};
+
+
 
 
 
@@ -119,6 +168,78 @@ export default function RecetteCreate() {
           margin="normal"
           inputProps={{ min: 0 }}
         />
+
+        <TextField
+          fullWidth
+          label="Protéines (g)"
+          type="number"
+          value={proteines}
+          onChange={e => setProteines(e.target.value)}
+          margin="normal"
+        />
+
+        <TextField
+          fullWidth
+          label="Lipides (g)"
+          type="number"
+          value={lipides}
+          onChange={e => setLipides(e.target.value)}
+          margin="normal"
+        />
+
+        <TextField
+          fullWidth
+          label="Glucides (g)"
+          type="number"
+          value={glucides}
+          onChange={e => setGlucides(e.target.value)}
+          margin="normal"
+        />
+
+        <TextField
+          fullWidth
+          label="Ingrédients (une par ligne)"
+          multiline
+          rows={4}
+          value={ingredients}
+          onChange={e => setIngredients(e.target.value)}
+          margin="normal"
+        />
+
+     <FormControl fullWidth margin="normal">
+      <InputLabel id="intolerances-label">Intolérances</InputLabel>
+      <Select
+        labelId="intolerances-label"
+        multiple
+        value={intolerances}
+        onChange={handleIntolerancesChange}
+        renderValue={(selected) => selected.join(', ')}
+      >
+        {intolerancesOptions.map((name) => (
+          <MenuItem key={name} value={name}>
+            <Checkbox checked={intolerances.indexOf(name) > -1} />
+            <ListItemText primary={name} />
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+
+        <TextField
+          fullWidth
+          label="Vitamines"
+          value={vitamines}
+          onChange={e => setVitamines(e.target.value)}
+          margin="normal"
+        />
+
+        <TextField
+          fullWidth
+          label="Minéraux"
+          value={mineraux}
+          onChange={e => setMineraux(e.target.value)}
+          margin="normal"
+        />
+
 
         <Button type="submit" variant="contained" sx={{ mt: 3 }}>
           Créer
