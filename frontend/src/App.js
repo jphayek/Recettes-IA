@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import LandingPage from './LandingPage';
 import {
   BrowserRouter as Router,
   Routes,
@@ -7,36 +8,70 @@ import {
   useParams
 } from 'react-router-dom';
 
+import {
+  Container,
+  Typography,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  CircularProgress,
+  Box,
+  Button
+} from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+
 function RecetteList() {
   const [recettes, setRecettes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch('http://localhost:3000/recettes')
       .then(res => res.json())
-      .then(data => setRecettes(data))
+      .then(data => {
+        setRecettes(data);
+        setLoading(false);
+      })
       .catch(console.error);
   }, []);
 
+  if (loading) {
+    return (
+      <Container sx={{ textAlign: 'center', mt: 10 }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
   return (
-    <div style={{ maxWidth: 600, margin: 'auto', padding: 20 }}>
-      <h1>Liste des recettes</h1>
-      {recettes.length === 0 && <p>Aucune recette trouvée.</p>}
-      <ul>
-        {recettes.map(r => (
-          <li key={r.id}>
-            <Link to={`/recettes/${r.id}`}>
-              <strong>{r.nom}</strong> — {r.calories} kcal
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <Container maxWidth="sm" sx={{ mt: 5, mb: 5 }}>
+      <Typography variant="h4" component="h1" gutterBottom align="center">
+        Liste des recettes
+      </Typography>
+      {recettes.length === 0 ? (
+        <Typography>Aucune recette trouvée.</Typography>
+      ) : (
+        <List>
+          {recettes.map((r) => (
+            <ListItem key={r.id} disablePadding>
+              <ListItemButton component={Link} to={`/recettes/${r.id}`}>
+                <ListItemText
+                  primary={r.nom}
+                  secondary={`${r.calories} kcal`}
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      )}
+    </Container>
   );
 }
 
 function RecetteDetail() {
   const { id } = useParams();
   const [recette, setRecette] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`http://localhost:3000/recettes/${id}`)
@@ -44,27 +79,53 @@ function RecetteDetail() {
         if (!res.ok) throw new Error('Recette non trouvée');
         return res.json();
       })
-      .then(data => setRecette(data))
+      .then(data => {
+        setRecette(data);
+        setLoading(false);
+      })
       .catch(console.error);
   }, [id]);
 
-  if (!recette) return <p>Chargement...</p>;
+  if (loading) {
+    return (
+      <Container sx={{ textAlign: 'center', mt: 10 }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (!recette) {
+    return (
+      <Container sx={{ textAlign: 'center', mt: 10 }}>
+        <Typography variant="h6">Recette non trouvée.</Typography>
+        <Button variant="outlined" startIcon={<ArrowBackIcon />} href="/">
+          Retour à la liste
+        </Button>
+      </Container>
+    );
+  }
 
   return (
-    <div style={{ maxWidth: 600, margin: 'auto', padding: 20 }}>
-      <h1>{recette.nom}</h1>
+    <Container maxWidth="sm" sx={{ mt: 5, mb: 5 }}>
+      <Typography variant="h3" gutterBottom>
+        {recette.nom}
+      </Typography>
 
-      <p><strong>Calories :</strong> {recette["Calories"] ?? 'N/A'} kcal</p>
-      <p><strong>Protéines :</strong> {recette["Protéines"] ?? 'N/A'} g</p>
-      <p><strong>Glucides :</strong> {recette["Glucides"] ?? 'N/A'} g</p>
-      <p><strong>Lipides :</strong> {recette["Lipides"] ?? 'N/A'} g</p>
-      <p><strong>Vitamines :</strong> {recette["Vitamines"] ?? 'N/A'}</p>
-      <p><strong>Minéraux :</strong> {recette["Minéraux"] ?? 'N/A'}</p>
+      <Typography><strong>Calories :</strong> {recette.calories ?? 'N/A'} kcal</Typography>
+      <Typography><strong>Protéines :</strong> {recette.proteines ?? 'N/A'} g</Typography>
+      <Typography><strong>Glucides :</strong> {recette.glucides ?? 'N/A'} g</Typography>
+      <Typography><strong>Lipides :</strong> {recette.lipides ?? 'N/A'} g</Typography>
+      <Typography><strong>Vitamines :</strong> {recette.vitamines ?? 'N/A'}</Typography>
+      <Typography><strong>Minéraux :</strong> {recette.mineraux ?? 'N/A'}</Typography>
 
-      <p><strong>Description :</strong> {recette.description ?? 'Pas de description'}</p>
+      <Typography sx={{ mt: 3 }}><strong>Description :</strong> {recette.description ?? 'Pas de description'}</Typography>
 
-      <Link to="/">← Retour à la liste</Link>
-    </div>
+      <Box sx={{ mt: 4 }}>
+        <Button variant="contained" startIcon={<ArrowBackIcon />} component={Link} to="/">
+          Retour à la liste
+        </Button>
+      </Box>
+    </Container>
   );
 }
 
@@ -72,7 +133,8 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<RecetteList />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/recettes" element={<RecetteList />} />
         <Route path="/recettes/:id" element={<RecetteDetail />} />
       </Routes>
     </Router>
