@@ -11,13 +11,13 @@ import {
 import {
   Container,
   Typography,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
+  Card,
+  CardContent,
+  CardActions,
   CircularProgress,
   Box,
-  Button
+  Button,
+  Divider
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
@@ -44,25 +44,81 @@ function RecetteList() {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 5, mb: 5 }}>
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        Liste des recettes
+    <Container maxWidth="lg" sx={{ mt: 8, mb: 8 }}>
+      <Typography
+        variant="h3"
+        component="h1"
+        gutterBottom
+        align="center"
+        sx={{ fontWeight: 700, color: '#1976d2' /* bleu MUI */ }}
+      >
+        Nos délicieuses recettes
       </Typography>
+      <Divider sx={{ mb: 4, width: '60px', mx: 'auto', borderBottomWidth: 3, borderColor: '#1976d2' }} />
+
       {recettes.length === 0 ? (
-        <Typography>Aucune recette trouvée.</Typography>
+        <Typography align="center" color="text.secondary" sx={{ mt: 6 }}>
+          Aucune recette trouvée.
+        </Typography>
       ) : (
-        <List>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' },
+            gap: 4,
+          }}
+        >
           {recettes.map((r) => (
-            <ListItem key={r.id} disablePadding>
-              <ListItemButton component={Link} to={`/recettes/${r.id}`}>
-                <ListItemText
-                  primary={r.nom}
-                  secondary={`${r.calories} kcal`}
-                />
-              </ListItemButton>
-            </ListItem>
+            <Card
+              key={r.id}
+              component={Link}
+              to={`/recettes/${r.id}`}
+              variant="outlined"
+              sx={{
+                textDecoration: 'none',
+                borderRadius: 3,
+                bgcolor: 'background.paper',
+                boxShadow: 2,
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                '&:hover': {
+                  boxShadow: 6,
+                  transform: 'translateY(-6px)',
+                },
+              }}
+            >
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Typography variant="h5" component="div" sx={{ fontWeight: 700, mb: 1.5 }}>
+                  {r.nom}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ minHeight: 60, overflow: 'hidden', textOverflow: 'ellipsis' }}
+                >
+                  {r.description || 'Pas de description disponible.'}
+                </Typography>
+              </CardContent>
+              <CardActions
+                sx={{
+                  justifyContent: 'space-between',
+                  px: 2,
+                  pb: 2,
+                  pt: 0,
+                }}
+              >
+                <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 600 }}>
+                  {r.calories} kcal
+                </Typography>
+                <Button size="small" variant="contained" color="primary">
+                  Voir
+                </Button>
+              </CardActions>
+            </Card>
           ))}
-        </List>
+        </Box>
       )}
     </Container>
   );

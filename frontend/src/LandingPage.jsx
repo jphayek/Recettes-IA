@@ -46,7 +46,7 @@ export default function LandingPage() {
           variant="contained"
           size="large"
           component={Link}
-          to="/"
+          to="/recettes"
           sx={{
             bgcolor: 'secondary.main',
             px: 5,
