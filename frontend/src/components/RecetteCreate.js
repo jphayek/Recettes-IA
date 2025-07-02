@@ -47,6 +47,7 @@ export default function RecetteCreate() {
   const [vitamines, setVitamines] = useState('');
   const [mineraux, setMineraux] = useState('');
   const [intolerances, setIntolerances] = useState([]);
+  const [typeDePlat, setTypeDePlat] = useState('');
 
   const intolerancesOptions = [
     "Gluten",
@@ -55,6 +56,14 @@ export default function RecetteCreate() {
     "Œufs",
     "Soja",
     "Poissons",
+  ];
+
+  const typeDePlatOptions = [
+    "Entrée",
+    "Plat principal",
+    "Dessert",
+    "Apéritif",
+    "Accompagnement",
   ];
 
   const handleIntolerancesChange = (event) => {
@@ -141,6 +150,21 @@ export default function RecetteCreate() {
           margin="normal"
           required
         />
+        <FormControl fullWidth margin="normal">
+          <InputLabel id="type-plat-label">Type de plat</InputLabel>
+          <Select
+            labelId="type-plat-label"
+            value={typeDePlat}
+            onChange={(e) => setTypeDePlat(e.target.value)}
+            label="Type de plat"
+          >
+            {typeDePlatOptions.map((type) => (
+              <MenuItem key={type} value={type}>
+                {type}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <TextField
           fullWidth
           label="Étapes (une par ligne)"
@@ -205,6 +229,7 @@ export default function RecetteCreate() {
           onChange={e => setIngredients(e.target.value)}
           margin="normal"
         />
+
 
      <FormControl fullWidth margin="normal">
       <InputLabel id="intolerances-label">Intolérances</InputLabel>

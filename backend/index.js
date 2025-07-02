@@ -41,8 +41,9 @@ app.post("/recettes", async (req, res) => {
     proteines,
     lipides,
     glucides,
+    typeDePlat,
     ingredients,
-    intolérances,
+    intolerances,
     etapes,
     vitamines,
     mineraux,
@@ -53,19 +54,38 @@ app.post("/recettes", async (req, res) => {
   }
 
   try {
+    // Si ingredients est un tableau de noms, convertis en IDs
+    let ingredientIds = [];
+    if (Array.isArray(ingredients) && ingredients.length > 0 && typeof ingredients[0] === "string") {
+      const ingredientRecords = await ingredientsTable.select({
+        filterByFormula: `OR(${ingredients.map(name => `FIND("${name}", {Nom})`).join(",")})`
+      }).all();
+      ingredientIds = ingredientRecords.map(r => r.id);
+    }
+
+    // Même pour intolérances
+    let intoleranceIds = [];
+    if (Array.isArray(intolerances) && intolerances.length > 0 && typeof intolerances[0] === "string") {
+      const intoleranceRecords = await intolerancesTable.select({
+        filterByFormula: `OR(${intolerances.map(name => `FIND("${name}", {Nom})`).join(",")})`
+      }).all();
+      intoleranceIds = intoleranceRecords.map(r => r.id);
+    }
+
     const created = await recettesTable.create({
-        "Nom": nom,
-        "Description": description || "",
-        "Calories": parseInt(calories),
-        "Nb de personnes": parseInt(nbPersonnes) || null,
-        "Protéines": proteines || null,
-        "Lipides": lipides || null,
-        "Glucides": glucides || null,
-        "Ingrédients": ingredients || [],
-        "Intolérances": intolérances || [],
-        "Étapes": Array.isArray(etapes) ? etapes.join('\n') : etapes || "",
-        "Vitamines": vitamines || "",
-        "Minéraux": mineraux || "",
+      "Nom": nom,
+      "Description": description || "",
+      "Calories": parseInt(calories),
+      ...(typeDePlat ? { "Type de plat": typeDePlat } : {}),
+      "Nb de personnes": parseInt(nbPersonnes) || null,
+      "Protéines": proteines || null,
+      "Lipides": lipides || null,
+      "Glucides": glucides || null,
+      "Ingrédients": ingredientIds,
+      "Intolérances": intoleranceIds,
+      "Étapes": Array.isArray(etapes) ? etapes.join('\n') : etapes || "",
+      "Vitamines": vitamines || "",
+      "Minéraux": mineraux || "",
     });
 
     res.status(201).json({
@@ -77,6 +97,7 @@ app.post("/recettes", async (req, res) => {
     res.status(500).json({ error: "Erreur lors de la création de la recette." });
   }
 });
+
 
 
 
