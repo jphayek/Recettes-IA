@@ -33,7 +33,20 @@ app.get("/recettes", async (req, res) => {
  * POST /recettes — ajouter une recette
  */
 app.post("/recettes", async (req, res) => {
-  const { nom, description, calories } = req.body;
+  const {
+    nom,
+    description,
+    calories,
+    nbPersonnes,
+    proteines,
+    lipides,
+    glucides,
+    ingredients,
+    intolérances,
+    etapes,
+    vitamines,
+    mineraux,
+  } = req.body;
 
   if (!nom || !calories) {
     return res.status(400).json({ error: "Nom et calories requis" });
@@ -44,19 +57,28 @@ app.post("/recettes", async (req, res) => {
       "Nom": nom,
       "Description": description || "",
       "Calories": parseInt(calories),
+      "Nb de personnes": parseInt(nbPersonnes) || null,
+      "Protéines": proteines || null,
+      "Lipides": lipides || null,
+      "Glucides": glucides || null,
+      "Ingrédients": ingredients || [],
+      "Intolérances": intolérances || [],
+      "Étapes": etapes || "",
+      "Vitamines": vitamines || "",
+      "Minéraux": mineraux || "",
     });
 
     res.status(201).json({
       id: created.id,
-      nom: created.get("Nom"),
-      description: created.get("Description"),
-      calories: created.get("Calories"),
+      ...created.fields,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Erreur lors de la création de la recette." });
   }
 });
+
+
 
 app.get('/recettes/:id', async (req, res) => {
   try {
@@ -90,6 +112,22 @@ app.get('/ingredients/:id', async (req, res) => {
   }
 });
 
+
+app.get("/ingredients", async (req, res) => {
+  try {
+    const records = await table.select({}).all();
+
+    const ingredients = records.map(record => ({
+      id: record.id,
+      nom: (record.get("Nom") || "").trim(),
+    }));
+
+    res.json(ingredients);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur lors de la récupération des ingrédients." });
+  }
+});
 
 app.listen(3000, () => {
   console.log("✅ Serveur backend lancé sur http://localhost:3000");
