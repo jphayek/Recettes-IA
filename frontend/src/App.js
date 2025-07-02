@@ -130,17 +130,27 @@ function RecetteDetail() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/recettes/${id}`)
-      .then(res => {
-        if (!res.ok) throw new Error('Recette non trouvée');
-        return res.json();
-      })
-      .then(data => {
-        setRecette(data);
-        setLoading(false);
-      })
-      .catch(console.error);
-  }, [id]);
+  fetch(`http://localhost:3000/recettes/${id}`)
+    .then(res => res.json())
+    .then(data => {
+      const recetteFormatee = {
+        nom: data.Nom.trim(),
+        description: data.Description,
+        etapes: data['Étapes'] ? data['Étapes'].split('\n').map(e => e.trim()) : [],
+        nbPersonnes: data['Nb de personnes'],
+        calories: data.Calories,
+        proteines: data['Protéines'],
+        lipides: data.Lipides,
+        glucides: data.Glucides,
+        ingredientsIds: data['Ingrédients'] || [],
+        vitamines: data.Vitamines,
+        mineraux: data['Minéraux'],
+      };
+      setRecette(recetteFormatee);
+      setLoading(false);
+    })
+    .catch(console.error);
+}, [id]);
 
   if (loading) {
     return (
@@ -152,35 +162,91 @@ function RecetteDetail() {
 
   if (!recette) {
     return (
-      <Container sx={{ textAlign: 'center', mt: 10 }}>
-        <Typography variant="h6">Recette non trouvée.</Typography>
-        <Button variant="outlined" startIcon={<ArrowBackIcon />} href="/">
-          Retour à la liste
+      <Container sx={{ mt: 8, textAlign: 'center' }}>
+        <Typography variant="h6" color="error">
+          Recette non trouvée.
+        </Typography>
+        <Button component={Link} to="/" sx={{ mt: 2 }}>
+          Retour à l'accueil
         </Button>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 5, mb: 5 }}>
-      <Typography variant="h3" gutterBottom>
-        {recette.nom}
-      </Typography>
+    <Container maxWidth="md" sx={{ mt: 8, mb: 8 }}>
+      <Button component={Link} to="/" variant="outlined" sx={{ mb: 3 }}>
+        ← Retour à la liste
+      </Button>
 
-      <Typography><strong>Calories :</strong> {recette.calories ?? 'N/A'} kcal</Typography>
-      <Typography><strong>Protéines :</strong> {recette.proteines ?? 'N/A'} g</Typography>
-      <Typography><strong>Glucides :</strong> {recette.glucides ?? 'N/A'} g</Typography>
-      <Typography><strong>Lipides :</strong> {recette.lipides ?? 'N/A'} g</Typography>
-      <Typography><strong>Vitamines :</strong> {recette.vitamines ?? 'N/A'}</Typography>
-      <Typography><strong>Minéraux :</strong> {recette.mineraux ?? 'N/A'}</Typography>
+      <Card
+        variant="outlined"
+        sx={{
+          borderRadius: 3,
+          boxShadow: 3,
+          p: 3,
+          bgcolor: 'background.paper',
+        }}
+      >
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 2 }}>
+          {recette.nom}
+        </Typography>
 
-      <Typography sx={{ mt: 3 }}><strong>Description :</strong> {recette.description ?? 'Pas de description'}</Typography>
+        <Divider sx={{ mb: 3 }} />
 
-      <Box sx={{ mt: 4 }}>
-        <Button variant="contained" startIcon={<ArrowBackIcon />} component={Link} to="/">
-          Retour à la liste
-        </Button>
-      </Box>
+        <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 3 }}>
+          {recette.description || 'Aucune description disponible.'}
+        </Typography>
+
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Calories
+          </Typography>
+          <Typography variant="body1" color="primary" sx={{ fontWeight: 600 }}>
+            {recette.calories} kcal
+          </Typography>
+        </Box>
+
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Ingrédients
+          </Typography>
+          {recette.ingredients && recette.ingredients.length > 0 ? (
+            <ul>
+              {recette.ingredients.map((ing, idx) => (
+                <li key={idx}>
+                  <Typography variant="body1">{ing}</Typography>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              Aucun ingrédient listé.
+            </Typography>
+          )}
+        </Box>
+
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            Étapes
+          </Typography>
+          {recette.etapes && recette.etapes.length > 0 ? (
+            <ol>
+              {recette.etapes.map((etape, idx) => (
+                <li key={idx}>
+                  <Typography variant="body1" paragraph>
+                    {etape}
+                  </Typography>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              Aucune étape renseignée.
+            </Typography>
+          )}
+        </Box>
+      </Card>
     </Container>
   );
 }
