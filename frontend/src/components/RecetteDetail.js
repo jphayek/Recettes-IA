@@ -22,7 +22,7 @@ export default function RecetteDetail() {
           proteines: data['Protéines'] || 0,
           lipides: data.Lipides || 0,
           glucides: data.Glucides || 0,
-          ingredientsIds: data['Ingrédients'] || [],
+          ingredientsIds: data['Ingredients'] || [],
           vitamines: data.Vitamines || '',
           mineraux: data['Minéraux'] || '',
         };

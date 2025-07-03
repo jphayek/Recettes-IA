@@ -104,8 +104,9 @@ app.post("/recettes", async (req, res) => {
 
 app.get('/recettes/:id', async (req, res) => {
   try {
-    const record = await table.find(req.params.id);
+    const record = await recettesTable.find(req.params.id);
     console.log(record.fields);
+    console.log("Ingrédients du record :", record.fields['Ingrédients']);
     res.json({
       id: record.id,
       ...record.fields
